@@ -34,5 +34,9 @@ Disclaimer: [Powered by CoinDesk](https://www.coindesk.com/price/bitcoin)!!!
 
 Thanks to CoinDesk, we have quick access to their BPI(Bitcoin Price Index) data; current prices in USD, GBP and EUR and historical prices in USD.
 
+- ### BitcoinAverage.com
+
 
 ## Data ingestion
+Imagine we have a influx of data in real time or near real time, we would have to pass them through as soon as possible.
+Apache Kafka is a popular choice in this space, known for it's fault tolerance, low latency and high throughput.  
