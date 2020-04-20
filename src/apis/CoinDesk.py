@@ -36,16 +36,16 @@ def get_prev(url):
 
 
 if __name__ == '__main__':
-    # current bitcoin price
-    url = "https://api.coindesk.com/v1/bpi/currentprice.json"
-    print(get_current_price(url))
+    # #  current bitcoin price
+    # url = "https://api.coindesk.com/v1/bpi/currentprice.json"
+    # print(get_current_price(url))
 
     # historical bitcoin prices of the previous 31 days
     url = "https://api.coindesk.com/v1/bpi/historical/close.json"
     print(get_prev(url))
 
-    start_date = '2019-01-01'
-    end_date = '2019-04-01'
-    # sample historical bitcoin prices for a period of time: 2013-08-01 to 2013-09-05
-    url = f"https://api.coindesk.com/v1/bpi/historical/close.json?start={start_date}&end={end_date}"
-    print(get_prev(url))
+    # start_date = '2019-01-01'
+    # end_date = '2019-04-01'
+    # # sample historical bitcoin prices for a period of time: 2013-08-01 to 2013-09-05
+    # url = f"https://api.coindesk.com/v1/bpi/historical/close.json?start={start_date}&end={end_date}"
+    # print(get_prev(url))

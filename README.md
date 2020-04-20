@@ -15,7 +15,7 @@ The current plan is to build a streaming pipeline for crypto prices.
 1. Ingress crypto currency prices from various free API calls, e.g.
 `CoinMarketCap.py`
     - **Airflow** for orchestration to stay within the daily API call limits
-2. Stream the incoming data using **Kafka**
+2. Ingest the incoming data using **Kafka**, with data possibly to be consumed by multiple applications.
 3. Connect to **Spark** streaming for data processing and analytics
 4. Store the data in **Cassandra** ([connection to Grafana](https://medium.com/@prashantkrgupta28/grafana-cassandra-as-datasource-visualization-of-cassandra-data-712bedfb81fb))
 5. **Grafana** dashboard through **InfluxDB**? 
@@ -39,7 +39,9 @@ Thanks to CoinDesk, we have quick access to their BPI(Bitcoin Price Index) data;
 
 ## Data ingestion
 Imagine we have a influx of data in real time or near real time, we would have to pass them through as soon as possible.
-Apache Kafka is a popular choice in this space, known for it's fault tolerance, low latency and high throughput.  
+Apache Kafka is a popular choice in this space, known for it's fault tolerance, low latency and high throughput, 
+independent from the Hadoop ecosystem. 
+ 
 
 #### Kafka Setup
 1. Pegasus up a Spark Cluster and ZooKeeper (1 Master and 3 Nodes)
@@ -66,17 +68,20 @@ Apache Kafka is a popular choice in this space, known for it's fault tolerance, 
     Add the following on the top of the file after all the comments
     
     `export JMX_PORT=${JMX_PORT:-9999}`
-4. Start Kafka on each node
+4. Start Zookeeper (if it's not already done through pegasus) and Kafka on each node
 ```
+bin/zookeeper-server-start.sh config/zookeeper.properties &
+
 kafka_2.12-2.4.1$ sudo bin/kafka-server-start.sh config/server.properties &
 ```
+Now kafka should be running and we can start sending messages
 
-5. Create a topic "my-topic" at one of the node
+* Create a topic "my-topic" at one of the node. The length of Kafka topic name should not exceed 249. 
 ```
 ubuntu@ip-10-0-0-8:~/kafka_2.12-2.4.1$ ./bin/kafka-console-producer.sh --broker-list localhost:9092 --topic my-topic
 ```
 
-6. Check the topics from other nodes
+* Check the topics from other nodes
 ```
 ubuntu@ip-10-0-0-5:~/kafka_2.12-2.4.1$  ./bin/kafka-topics.sh --describe --zookeeper localhost:2181 --topic my-topic
 
@@ -84,19 +89,27 @@ Topic: my-topic06	PartitionCount: 2	ReplicationFactor: 3	Configs:
 	Topic: my-topic06	Partition: 0	Leader: 2	Replicas: 2,3,0	Isr: 2,3,0
 	Topic: my-topic06	Partition: 1	Leader: 3	Replicas: 3,0,1	Isr: 3,0,1
 ```
+
 - *Leader* is the node responsible for all reads and writes for the given partition. 
-Each node will be the leader for a randomly selected portion of the partitions
-
+    Each node will be the leader for a randomly selected portion of the partitions
 - *Replicas* is the list of nodes that replicate the log for this partition regardless of whether they are the leader or even if they are currently alive.
-
 - *Isr* is the set of “in-sync” replicas. 
+
 This is the subset of the replicas list that is currently alive and caught-up to the leader
 
-7. Publish messages from one node.
+* Publish messages from one node.
 ```
 ubuntu@ip-10-0-0-8:~/kafka_2.12-2.4.1$ ./bin/kafka-console-producer.sh --broker-list localhost:9092 --topic my-topic
 ```
-8. Consume the messages from other nodes
+After the `>` prompt, type the message.
+
+* Consume the messages from other nodes
 ```
 ubuntu@ip-10-0-0-4:~/kafka_2.12-2.4.1$ ./bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic my-topic --from-beginning
 ```
+You should be able to see the messages that you typed from another terminal.
+
+#### Kafka connector
+1. under config, modify `connect-file-standalone`, `connect-file-sink.properties` and `connect-file-source.properties` files
+2. JSON file for kafka producer, where kafka reads the messages line by line
+
